@@ -1,0 +1,6 @@
+allprojects {
+    ext {
+        activitiVersion = '8.2.0'
+        springBootVersion = '3.3.2'
+    }
+}
