@@ -1,3 +1,4 @@
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/activiti_db
@@ -9,5 +10,14 @@ spring:
     username: default_user__A3swWy6z-ThqiPDg36
     password: 8_SEOpUR966TUmKUXPvle3rC6HGFYNtm
     host: localhost
-
-
+  graphql:
+    graphiql:
+      enabled: true
+keycloak:
+  auth-server-url: ${ACT_KEYCLOAK_URL:http://keycloak.internal.witt-family.net/admin}
+  realm: ${ACT_KEYCLOAK_REALM:activiti}
+  resource: ${ACT_KEYCLOAK_RESOURCE:activiti}
+  ssl-required: ${ACT_KEYCLOAK_SSL_REQUIRED:none}
+  public-client: ${ACT_KEYCLOAK_CLIENT:true}
+  cors: true
+  principal-attribute: ${ACT_KEYCLOAK_PRINCIPAL_ATTRIBUTE:preferred-username}

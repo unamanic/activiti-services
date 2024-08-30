@@ -6,7 +6,7 @@ authorizations:
     - authRoles:
         - ${ACT_KEYCLOAK_USER_ROLE:ACTIVITI_USER}
       patterns:
-        - ${ACT_KEYCLOAK_PATTERNS:/v1/*}
+        - ${ACT_KEYCLOAK_PATTERNS:/v1/*,/graphql,/graphiql*}
     - authRoles:
         - ${ACT_KEYCLOAK_ADMIN_ROLE:ACTIVITI_ADMIN}
       patterns:
@@ -61,11 +61,3 @@ spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
 
 spring.jackson.serialization.fail-on-unwrapped-type-identifiers: ${ACT_QUERY_JACKSON_FAIL_ON_UNWRAPPED_IDS:false}
 
-keycloak:
-  auth-server-url: ${ACT_KEYCLOAK_URL:http://keycloak.internal.witt-family.net/auth}
-  realm: ${ACT_KEYCLOAK_REALM:activiti}
-  resource: ${ACT_KEYCLOAK_RESOURCE:activiti}
-  ssl-required: ${ACT_KEYCLOAK_SSL_REQUIRED:none}
-  public-client: ${ACT_KEYCLOAK_CLIENT:true}
-  cors: true
-  principal-attribute: ${ACT_KEYCLOAK_PRINCIPAL_ATTRIBUTE:preferred-username}
