@@ -1,0 +1,11 @@
+auth:
+  enablePostgresUser: true
+  postgresPassword: "!QAZ2wsx#EDC4rfv"
+  username: "activiti"
+  password: "@WSX3edc$RFV5tgb"
+  database: "activiti_db"
+
+# The postgres helm chart deployment will be using PVC postgresql-data-claim
+primary:
+  persistence:
+    existingClaim: "activiti-pgsql-claim"

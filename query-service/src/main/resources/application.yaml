@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: query-service
+authorizations:
+  security-constraints:
+    - authRoles:
+        - ${ACT_KEYCLOAK_USER_ROLE:ACTIVITI_USER}
+      patterns:
+        - ${ACT_KEYCLOAK_PATTERNS:/v1/*}
+    - authRoles:
+        - ${ACT_KEYCLOAK_ADMIN_ROLE:ACTIVITI_ADMIN}
+      patterns:
+        - /admin/*
+
+springdoc:
+  swagger-ui:
+    urls:
+      - url: /audit/v3/api-docs/Audit
+        name: Audit
+      - url: /query/v3/api-docs/Query
+        name: Query
+  config-url: /query/v3/api-docs/swagger-config
+  oauth2-redirect-url: /query/swagger-ui/oauth2-redirect.html
+
+activiti:
+  cloud:
+    application:
+      name: query-service
+    services:
+      oauth2.iam-name: keycloak
+  keycloak:
+    client-id: ${ACTIVITI_KEYCLOAK_CLIENT_ID:activiti-keycloak}
+    client-secret: ${ACTIVITI_KEYCLOAK_CLIENT_SECRET:545bc187-f10f-41f9-8d5f-cfca3dbada9c}
+
+spring.security.oauth2.resourceserver.jwt.issuer-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}
+spring.security.oauth2.resourceserver.jwt.jwk-set-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/certs
+
+spring.security.oauth2.client.registration.keycloak.client-id: ${activiti.keycloak.client-id}
+spring.security.oauth2.client.registration.keycloak.client-secret: ${activiti.keycloak.client-secret}
+spring.security.oauth2.client.registration.keycloak.authorization-grant-type: ${activiti.keycloak.grant-type}
+spring.security.oauth2.client.registration.keycloak.scope: openid
+
+spring.security.oauth2.client.provider.keycloak.authorization-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/authorize
+spring.security.oauth2.client.provider.keycloak.token-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
+
+
+# QUERY
+spring.cloud.stream.bindings.producer.destination: ${ACT_QUERY_PRODUCER_DEST:engineEvents}
+spring.cloud.stream.bindings.producer.contentType: ${ACT_QUERY_PRODUCER_CONTENT_TYPE:application/json}
+spring.cloud.stream.bindings.queryConsumer.destination: ${ACT_QUERY_CONSUMER_DEST:engineEvents}
+spring.cloud.stream.bindings.queryConsumer.group: ${ACT_QUERY_CONSUMER_GROUP:query}
+spring.cloud.stream.bindings.queryConsumer.contentType: ${ACT_QUERY_CONSUMER_CONTENT_TYPE:application/json}
+
+# AUDIT
+spring.cloud.stream.bindings.auditConsumer.destination: ${ACT_AUDIT_CONSUMER_DEST:engineEvents}
+spring.cloud.stream.bindings.auditConsumer.group: ${ACT_AUDIT_CONSUMER_GROUP:audit}
+spring.cloud.stream.bindings.auditConsumer.contentType: ${ACT_AUDIT_CONSUMER_CONTENT_TYPE:application/json}
+
+#for https://stackoverflow.com/questions/46493500/hibernate-with-c3p0-createclob-is-not-yet-implemented
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
+
+spring.jackson.serialization.fail-on-unwrapped-type-identifiers: ${ACT_QUERY_JACKSON_FAIL_ON_UNWRAPPED_IDS:false}
+
+keycloak:
+  auth-server-url: ${ACT_KEYCLOAK_URL:http://keycloak.internal.witt-family.net/auth}
+  realm: ${ACT_KEYCLOAK_REALM:activiti}
+  resource: ${ACT_KEYCLOAK_RESOURCE:activiti}
+  ssl-required: ${ACT_KEYCLOAK_SSL_REQUIRED:none}
+  public-client: ${ACT_KEYCLOAK_CLIENT:true}
+  cors: true
+  principal-attribute: ${ACT_KEYCLOAK_PRINCIPAL_ATTRIBUTE:preferred-username}
