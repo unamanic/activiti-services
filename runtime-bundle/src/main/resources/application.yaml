@@ -1,6 +1,6 @@
 spring:
   application:
-    name: query-service
+    name: runtime-bundle
 authorizations:
   security-constraints:
     - authRoles:
@@ -12,20 +12,10 @@ authorizations:
       patterns:
         - /admin/*
 
-springdoc:
-  swagger-ui:
-    urls:
-      - url: /audit/v3/api-docs/Audit
-        name: Audit
-      - url: /query/v3/api-docs/Query
-        name: Query
-  config-url: /query/v3/api-docs/swagger-config
-  oauth2-redirect-url: /query/swagger-ui/oauth2-redirect.html
-
 activiti:
   cloud:
     application:
-      name: query-service
+      name: runtime-bundle
     services:
       oauth2.iam-name: keycloak
   keycloak:
@@ -43,21 +33,4 @@ spring.security.oauth2.client.registration.keycloak.scope: openid
 spring.security.oauth2.client.provider.keycloak.authorization-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/authorize
 spring.security.oauth2.client.provider.keycloak.token-uri: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect/token
 
-
-# QUERY
-spring.cloud.stream.bindings.producer.destination: ${ACT_QUERY_PRODUCER_DEST:engineEvents}
-spring.cloud.stream.bindings.producer.contentType: ${ACT_QUERY_PRODUCER_CONTENT_TYPE:application/json}
-spring.cloud.stream.bindings.queryConsumer.destination: ${ACT_QUERY_CONSUMER_DEST:engineEvents}
-spring.cloud.stream.bindings.queryConsumer.group: ${ACT_QUERY_CONSUMER_GROUP:query}
-spring.cloud.stream.bindings.queryConsumer.contentType: ${ACT_QUERY_CONSUMER_CONTENT_TYPE:application/json}
-
-# AUDIT
-spring.cloud.stream.bindings.auditConsumer.destination: ${ACT_AUDIT_CONSUMER_DEST:engineEvents}
-spring.cloud.stream.bindings.auditConsumer.group: ${ACT_AUDIT_CONSUMER_GROUP:audit}
-spring.cloud.stream.bindings.auditConsumer.contentType: ${ACT_AUDIT_CONSUMER_CONTENT_TYPE:application/json}
-
-#for https://stackoverflow.com/questions/46493500/hibernate-with-c3p0-createclob-is-not-yet-implemented
-spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation: true
-
-spring.jackson.serialization.fail-on-unwrapped-type-identifiers: ${ACT_QUERY_JACKSON_FAIL_ON_UNWRAPPED_IDS:false}
 

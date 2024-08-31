@@ -5,7 +5,7 @@ FROM openjdk:21-jdk-slim
 VOLUME /tmp
 
 # The application's jar file
-ARG JAR_FILE=target/runtime-bundle*.jar
+ARG JAR_FILE=build/libs/runtime-bundle*.jar
 
 # Add the application's jar to the container
 COPY ${JAR_FILE} app.jar

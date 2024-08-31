@@ -5,7 +5,7 @@ spring:
     username: activiti
     password: "@WSX3edc$RFV5tgb"
     hikari:
-      schema: query_service
+      schema: runtime_bundle
   rabbitmq:
     username: default_user__A3swWy6z-ThqiPDg36
     password: 8_SEOpUR966TUmKUXPvle3rC6HGFYNtm

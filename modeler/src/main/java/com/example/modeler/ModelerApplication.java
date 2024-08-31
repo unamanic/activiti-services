@@ -1,15 +1,17 @@
-package com.example.runtimebundle;
+package com.example.modeler;
 
-import org.activiti.cloud.starter.rb.configuration.ActivitiRuntimeBundle;
+import org.activiti.cloud.starter.juel.configuration.EnableActivitiJuel;
+import org.activiti.cloud.starter.modeling.configuration.EnableActivitiModeling;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@ActivitiRuntimeBundle
-public class RuntimeBundleApplication {
+@EnableActivitiModeling
+@EnableActivitiJuel
+public class ModelerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(RuntimeBundleApplication.class, args);
+        SpringApplication.run(ModelerApplication.class, args);
     }
 
 }
