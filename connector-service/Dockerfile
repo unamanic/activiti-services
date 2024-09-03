@@ -5,12 +5,10 @@ FROM openjdk:21-jdk-slim
 VOLUME /tmp
 
 # The application's jar file
-ARG JAR_FILE=target/connector-service*.jar
+ARG JAR_FILE=build/libs/connector-service*.jar
 
 # Add the application's jar to the container
 COPY ${JAR_FILE} app.jar
-
-EXPOSE 8080
 
 # Run the jar file
 ENTRYPOINT ["java","-jar","/app.jar"]

@@ -28,14 +28,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    implementation 'org.activiti.cloud:activiti-cloud-starter-runtime-bundle'
-    implementation 'org.activiti.cloud:activiti-cloud-starter-messages-jdbc'
+    implementation 'org.activiti.cloud:activiti-cloud-starter-connector'
     implementation 'org.activiti.cloud:activiti-cloud-service-messaging-starter'
 }
 
 dependencyManagement {
     imports {
-        mavenBom("org.activiti.cloud:activiti-cloud-runtime-bundle-dependencies:$activitiVersion")
+        mavenBom("org.activiti.cloud:activiti-cloud-connectors-dependencies:$activitiVersion")
         mavenBom("org.activiti.cloud:activiti-cloud-messages-dependencies:$activitiVersion")
     }
 }

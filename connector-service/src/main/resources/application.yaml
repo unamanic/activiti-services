@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: connector-service
+  cloud:
+    stream:
+      bindings:
+        testActionConsumer:
+          destination: test-connector.test-action
+          contentType: application/json
+          group: ${spring.application.name}
+
+activiti:
+  cloud:
+    application:
+      name: ${spring.application.name}

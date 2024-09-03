@@ -31,6 +31,10 @@ dependencies {
     implementation 'org.activiti.cloud:activiti-cloud-starter-runtime-bundle'
     implementation 'org.activiti.cloud:activiti-cloud-starter-messages-jdbc'
     implementation 'org.activiti.cloud:activiti-cloud-service-messaging-starter'
+
+    implementation 'org.postgresql:postgresql:42.7.2'
+
+    testImplementation 'com.h2database:h2'
 }
 
 dependencyManagement {

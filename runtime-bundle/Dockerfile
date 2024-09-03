@@ -1,6 +1,10 @@
 # Start with a base image containing Java runtime
 FROM openjdk:21-jdk-slim
 
+# Install fonts
+RUN apt-get update && apt-get install -y fontconfig libfreetype6 && rm -rf /var/lib/apt/lists/*
+
+
 # Add a volume pointing to /tmp
 VOLUME /tmp
 

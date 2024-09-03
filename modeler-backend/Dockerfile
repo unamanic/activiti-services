@@ -5,7 +5,7 @@ FROM openjdk:21-jdk-slim
 VOLUME /tmp
 
 # The application's jar file
-ARG JAR_FILE=target/modeler*.jar
+ARG JAR_FILE=build/libs/modeler*.jar
 
 # Add the application's jar to the container
 COPY ${JAR_FILE} app.jar
