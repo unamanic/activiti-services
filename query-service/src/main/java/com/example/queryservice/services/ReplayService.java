@@ -46,17 +46,13 @@ public class ReplayService {
             return criteriaBuilder.equal(root.get("processInstanceId"), id);
         }));
 
-        if(auditEvents.isEmpty()) {
+        if (auditEvents.isEmpty()) {
             return false;
         }
 
         // transform from audit events to cloud Runtime events
         List<CloudRuntimeEvent<?, ?>> cloudEvents = auditEvents.stream()
-                // do something real here, create one for each type that can be converted to an audit message:
-                // https://github.com/Activiti/activiti-cloud/tree/afa337cc8ed9ea847b65fd8270b80b5473266a91/activiti-cloud-audit-service/activiti-cloud-services-audit-model/src/main/java/org/activiti/cloud/services/audit/jpa/converters
-                //
-                // The runtime event implementations can be found in this repository:
-                // https://github.com/Activiti/Activiti/blob/ecec52d763b4ce0fe0362a0f3996b28bd877c318/activiti-api/activiti-api-model-shared/src/main/java/org/activiti/api/model/shared/event/RuntimeEvent.java
+                // use the audit service's built in mapper to map audit events back to cloud events
                 .map(auditEventEntity -> {
                     var converter = eventConverters.getConverterByEventTypeName(auditEventEntity.getEventType());
                     return converter.convertToAPI(auditEventEntity);
@@ -66,14 +62,11 @@ public class ReplayService {
 
 
         // purge process from query service
-        // I don't know if there is a method to cleanly purge
-        // worst case, go through each of these repositories and delete anything associated with the process instance id
-        // https://github.com/Activiti/activiti-cloud/tree/bec91b5a92319033f4f4d621d9f0123f3df641a9/activiti-cloud-query-service/activiti-cloud-services-query/activiti-cloud-services-query-repo/src/main/java/org/activiti/cloud/services/query/app/repository
         purgeService.purgeByProcessInstanceId(id);
 
         //reload query service with audit events
         // https://github.com/Activiti/activiti-cloud/blob/afa337cc8ed9ea847b65fd8270b80b5473266a91/activiti-cloud-query-service/activiti-cloud-services-query/activiti-cloud-services-query-events/src/main/java/org/activiti/cloud/services/query/app/QueryConsumerChannelHandler.java#L45-L48
-        eventHandlerContext.handle(optimizer.optimize(cloudEvents).toArray(new CloudRuntimeEvent[] {}));
+        eventHandlerContext.handle(optimizer.optimize(cloudEvents).toArray(new CloudRuntimeEvent[]{}));
 
         return true;
     }
