@@ -1,11 +1,12 @@
 package com.example.queryservice.contollers;
 
+import com.example.queryservice.model.ReplayResponse;
 import com.example.queryservice.services.ReplayService;
 import jakarta.websocket.server.PathParam;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/testing")
+@RequestMapping("/admin")
 public class ReplayController {
 
     private final ReplayService replayService;
@@ -15,8 +16,12 @@ public class ReplayController {
     }
 
     @GetMapping("/replay/{id}")
-    public String replay(@PathVariable("id") String id) {
-        replayService.replay(id);
-        return "foo";
+    public ReplayResponse replay(@PathVariable("id") String id) {
+        boolean success = replayService.replay(id);
+        return ReplayResponse
+                .builder()
+                .processInstanceId(id)
+                .success(success)
+                .build();
     }
 }

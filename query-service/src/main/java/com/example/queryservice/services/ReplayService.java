@@ -1,7 +1,6 @@
 package com.example.queryservice.services;
 
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import org.activiti.cloud.api.model.shared.events.CloudRuntimeEvent;
 import org.activiti.cloud.api.model.shared.events.CloudVariableUpdatedEvent;
 import org.activiti.cloud.api.model.shared.impl.events.CloudRuntimeEventImpl;
@@ -15,6 +14,7 @@ import org.activiti.cloud.services.query.events.handlers.QueryEventHandlerContex
 import org.activiti.cloud.services.query.events.handlers.QueryEventHandlerContextOptimizer;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,7 +27,6 @@ public class ReplayService {
     private final QueryEventHandlerContext eventHandlerContext;
     private final QueryEventHandlerContextOptimizer optimizer;
     private final APIEventToEntityConverters eventConverters;
-    private final ProcessInstanceRepository processInstanceRepository;
     private final PurgeService purgeService;
 
     public ReplayService(EventsRepository<AuditEventEntity> auditEventRepository, QueryEventHandlerContext eventHandlerContext, QueryEventHandlerContextOptimizer optimizer, APIEventToEntityConverters eventConverters, ProcessInstanceRepository processInstanceRepository, PurgeService purgeService) {
@@ -35,11 +34,10 @@ public class ReplayService {
         this.eventHandlerContext = eventHandlerContext;
         this.optimizer = optimizer;
         this.eventConverters = eventConverters;
-        this.processInstanceRepository = processInstanceRepository;
         this.purgeService = purgeService;
     }
 
-    @Transactional(Transactional.TxType.REQUIRED)
+    @Transactional
     public boolean replay(String id) {
         // find all audit events for a processInstance
         List<AuditEventEntity> auditEvents = auditEventRepository.findAll(((root, query, criteriaBuilder) -> {
