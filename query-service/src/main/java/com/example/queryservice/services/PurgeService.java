@@ -36,24 +36,36 @@ public class PurgeService {
         deleteBPMNActivities(processInstanceId, criteriaBuilder);
         deleteTasks(processInstanceId, criteriaBuilder);
         deleteTaskVariables(processInstanceId, criteriaBuilder);
+        deleteProcessVariables(processInstanceId, criteriaBuilder);
 
+        deleteProcessInstance(processInstanceId, criteriaBuilder);
+    }
+
+    private void deleteProcessInstance(String processInstanceId, CriteriaBuilder criteriaBuilder) {
         CriteriaDelete<ProcessInstanceEntity> processInstanceEntityCriteriaDelete = criteriaBuilder.createCriteriaDelete(ProcessInstanceEntity.class);
         Root<ProcessInstanceEntity> processInstanceEntityRoot = processInstanceEntityCriteriaDelete.from(ProcessInstanceEntity.class);
-        criteriaBuilder.equal(processInstanceEntityRoot.get("id"), processInstanceId);
+        processInstanceEntityCriteriaDelete.where(criteriaBuilder.equal(processInstanceEntityRoot.get("id"), processInstanceId));
         entityManager.createQuery(processInstanceEntityCriteriaDelete).executeUpdate();
     }
 
     private void deleteTaskVariables(String processInstanceId, CriteriaBuilder criteriaBuilder) {
         CriteriaDelete<TaskVariableEntity> taskVariableEntityCriteriaDelete = criteriaBuilder.createCriteriaDelete(TaskVariableEntity.class);
         Root<TaskVariableEntity> taskVariableEntityRoot = taskVariableEntityCriteriaDelete.from(TaskVariableEntity.class);
-        criteriaBuilder.equal(taskVariableEntityRoot.get("processInstanceId"), processInstanceId);
+        taskVariableEntityCriteriaDelete.where(criteriaBuilder.equal(taskVariableEntityRoot.get("processInstanceId"), processInstanceId));
         entityManager.createQuery(taskVariableEntityCriteriaDelete).executeUpdate();
+    }
+
+    private void deleteProcessVariables(String processInstanceId, CriteriaBuilder criteriaBuilder) {
+        CriteriaDelete<ProcessVariableEntity> processVariableEntityCriteriaDelete = criteriaBuilder.createCriteriaDelete(ProcessVariableEntity.class);
+        Root<ProcessVariableEntity> processVariableEntityRoot = processVariableEntityCriteriaDelete.from(ProcessVariableEntity.class);
+        processVariableEntityCriteriaDelete.where(criteriaBuilder.equal(processVariableEntityRoot.get("processInstanceId"), processInstanceId));
+        entityManager.createQuery(processVariableEntityCriteriaDelete).executeUpdate();
     }
 
     private void deleteTasks(String processInstanceId, CriteriaBuilder criteriaBuilder) {
         CriteriaQuery<TaskEntity> taskEntityCriteria = criteriaBuilder.createQuery(TaskEntity.class);
         Root<TaskEntity> taskEntityRoot = taskEntityCriteria.from(TaskEntity.class);
-        criteriaBuilder.equal(taskEntityRoot.get("processInstanceId"), processInstanceId);
+        taskEntityCriteria.where(criteriaBuilder.equal(taskEntityRoot.get("processInstanceId"), processInstanceId));
         List<TaskEntity> taskEntities = entityManager.createQuery(taskEntityCriteria).getResultList();
 
         List<String> taskIds = taskEntities.stream().map(TaskEntity::getId).collect(Collectors.toUnmodifiableList());
@@ -70,29 +82,27 @@ public class PurgeService {
         taskIds.forEach(taskCandidateUserInClause::value);
         entityManager.createQuery(taskCandidateUserEntityCriteriaDelete).executeUpdate();
 
-        CriteriaDelete<TaskEntity> taskEntityCriteriaDelete = criteriaBuilder.createCriteriaDelete(TaskEntity.class);
-        criteriaBuilder.equal(taskEntityRoot.get("processInstanceId"), processInstanceId);
-        entityManager.createQuery(taskEntityCriteriaDelete).executeUpdate();
+        taskEntities.forEach(entityManager::remove);
     }
 
     private void deleteBPMNActivities(String processInstanceId, CriteriaBuilder criteriaBuilder) {
         CriteriaDelete<BPMNActivityEntity> bpmnActivityEntityCriteriaDelete = criteriaBuilder.createCriteriaDelete(BPMNActivityEntity.class);
         Root<BPMNActivityEntity> bpmnActivityEntityRoot = bpmnActivityEntityCriteriaDelete.from(BPMNActivityEntity.class);
-        criteriaBuilder.equal(bpmnActivityEntityRoot.get("processInstanceId"), processInstanceId);
+        bpmnActivityEntityCriteriaDelete.where(criteriaBuilder.equal(bpmnActivityEntityRoot.get("processInstanceId"), processInstanceId));
         entityManager.createQuery(bpmnActivityEntityCriteriaDelete).executeUpdate();
     }
 
     private void deleteSequenceFlows(String processInstanceId, CriteriaBuilder criteriaBuilder) {
         CriteriaDelete<BPMNSequenceFlowEntity> bpmnSequenceFlowEntityCriteriaDelete = criteriaBuilder.createCriteriaDelete(BPMNSequenceFlowEntity.class);
         Root<BPMNSequenceFlowEntity> bpmnSequenceFlowEntityRoot = bpmnSequenceFlowEntityCriteriaDelete.from(BPMNSequenceFlowEntity.class);
-        criteriaBuilder.equal(bpmnSequenceFlowEntityRoot.get("processInstanceId"), processInstanceId);
+        bpmnSequenceFlowEntityCriteriaDelete.where(criteriaBuilder.equal(bpmnSequenceFlowEntityRoot.get("processInstanceId"), processInstanceId));
         entityManager.createQuery(bpmnSequenceFlowEntityCriteriaDelete).executeUpdate();
     }
 
     private void deleteIntegrationContexts(String processInstanceId, CriteriaBuilder criteriaBuilder) {
         CriteriaDelete<IntegrationContextEntity> integrationContextEntityCriteriaDelete = criteriaBuilder.createCriteriaDelete(IntegrationContextEntity.class);
         Root<IntegrationContextEntity> integrationContextEntityRoot = integrationContextEntityCriteriaDelete.from(IntegrationContextEntity.class);
-        criteriaBuilder.equal(integrationContextEntityRoot.get("processInstanceId"), processInstanceId);
+        integrationContextEntityCriteriaDelete.where(criteriaBuilder.equal(integrationContextEntityRoot.get("processInstanceId"), processInstanceId));
         entityManager.createQuery(integrationContextEntityCriteriaDelete).executeUpdate();
     }
 }
