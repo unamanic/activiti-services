@@ -8,6 +8,10 @@ spring:
           destination: test-connector.test-action
           contentType: application/json
           group: ${spring.application.name}
+        incrementActionConsumer:
+          destination: count.increment
+          contentType: application/json
+          group: ${spring.application.name}
 
 activiti:
   cloud:
