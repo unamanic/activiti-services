@@ -1,5 +1,5 @@
 # ── Build Stage ──────────────────────────────────────────────────
-FROM eclipse-temurin:25-jdk-noble AS builder
+FROM eclipse-temurin:21-jdk-noble AS builder
 WORKDIR /app
 
 COPY gradlew .
@@ -17,7 +17,7 @@ RUN chmod +x gradlew && \
     ./gradlew :connector-service:bootJar -x test --no-daemon
 
 # ── Run Stage ─────────────────────────────────────────────────────
-FROM eclipse-temurin:25-jre-noble
+FROM eclipse-temurin:21-jre-noble
 VOLUME /tmp
 COPY --from=builder /app/connector-service/build/libs/connector-service*.jar app.jar
 EXPOSE 8080

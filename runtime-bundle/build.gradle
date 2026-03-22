@@ -7,13 +7,13 @@ plugins {
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 ext {
-    activitiVersion = '9.0.0'
+    activitiVersion = '8.8.0'
     springBootVersion = '3.5.7'
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 

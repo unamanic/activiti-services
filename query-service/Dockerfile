@@ -1,5 +1,5 @@
 # ── Build Stage ──────────────────────────────────────────────────
-FROM eclipse-temurin:25-jdk-noble AS builder
+FROM eclipse-temurin:21-jdk-noble AS builder
 WORKDIR /app
 
 COPY gradlew .
@@ -17,7 +17,7 @@ RUN chmod +x gradlew && \
     ./gradlew :query-service:bootJar -x test --no-daemon
 
 # ── Run Stage ─────────────────────────────────────────────────────
-FROM eclipse-temurin:25-jre-noble
+FROM eclipse-temurin:21-jre-noble
 RUN apt-get update && apt-get install -y fontconfig libfreetype6 && rm -rf /var/lib/apt/lists/*
 VOLUME /tmp
 COPY --from=builder /app/query-service/build/libs/query-service*.jar app.jar
