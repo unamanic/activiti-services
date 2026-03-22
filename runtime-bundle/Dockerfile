@@ -1,20 +1,25 @@
-# Start with a base image containing Java runtime
-FROM openjdk:21-jdk-slim
+# ── Build Stage ──────────────────────────────────────────────────
+FROM eclipse-temurin:25-jdk-noble AS builder
+WORKDIR /app
 
-# Install fonts
+COPY gradlew .
+COPY gradle gradle
+COPY settings.gradle .
+COPY build.gradle .
+COPY query-service/build.gradle query-service/build.gradle
+COPY runtime-bundle/build.gradle runtime-bundle/build.gradle
+COPY connector-service/build.gradle connector-service/build.gradle
+COPY modeler-backend/build.gradle modeler-backend/build.gradle
+COPY runtime-bundle/src runtime-bundle/src
+
+RUN chmod +x gradlew && \
+    GRADLE_OPTS="-Dorg.gradle.java.installations.auto-detect=true -Dorg.gradle.java.installations.auto-download=false" \
+    ./gradlew :runtime-bundle:bootJar -x test --no-daemon
+
+# ── Run Stage ─────────────────────────────────────────────────────
+FROM eclipse-temurin:25-jre-noble
 RUN apt-get update && apt-get install -y fontconfig libfreetype6 && rm -rf /var/lib/apt/lists/*
-
-
-# Add a volume pointing to /tmp
 VOLUME /tmp
-
-# The application's jar file
-ARG JAR_FILE=build/libs/runtime-bundle*.jar
-
-# Add the application's jar to the container
-COPY ${JAR_FILE} app.jar
-
+COPY --from=builder /app/runtime-bundle/build/libs/runtime-bundle*.jar app.jar
 EXPOSE 8080
-
-# Run the jar file
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]

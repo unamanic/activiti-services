@@ -1,16 +1,24 @@
-# Start with a base image containing Java runtime
-FROM openjdk:21-jdk-slim
+# ── Build Stage ──────────────────────────────────────────────────
+FROM eclipse-temurin:25-jdk-noble AS builder
+WORKDIR /app
 
-# Add a volume pointing to /tmp
+COPY gradlew .
+COPY gradle gradle
+COPY settings.gradle .
+COPY build.gradle .
+COPY query-service/build.gradle query-service/build.gradle
+COPY runtime-bundle/build.gradle runtime-bundle/build.gradle
+COPY connector-service/build.gradle connector-service/build.gradle
+COPY modeler-backend/build.gradle modeler-backend/build.gradle
+COPY modeler-backend/src modeler-backend/src
+
+RUN chmod +x gradlew && \
+    GRADLE_OPTS="-Dorg.gradle.java.installations.auto-detect=true -Dorg.gradle.java.installations.auto-download=false" \
+    ./gradlew :modeler-backend:bootJar -x test --no-daemon
+
+# ── Run Stage ─────────────────────────────────────────────────────
+FROM eclipse-temurin:25-jre-noble
 VOLUME /tmp
-
-# The application's jar file
-ARG JAR_FILE=build/libs/modeler*.jar
-
-# Add the application's jar to the container
-COPY ${JAR_FILE} app.jar
-
+COPY --from=builder /app/modeler-backend/build/libs/modeler*.jar app.jar
 EXPOSE 8080
-
-# Run the jar file
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]

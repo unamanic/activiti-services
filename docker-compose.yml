@@ -1,15 +1,34 @@
-version: 2
+version: "3.9"
+
 services:
+
+  # ── Infrastructure ────────────────────────────────────────────────
+
   activiti-postgres:
-    image: postgres
+    image: postgres:16
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=mypassword
-      - POSTGRES_USER=activiti
-      - POSTGRES_DB=activitidb
+      POSTGRES_USER: activiti
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: activitidb
     volumes:
-      - "pgdata:/var/lib/postgresql/data"
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    restart: unless-stopped
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: activiti
+      RABBITMQ_DEFAULT_PASS: activiti
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "61613:61613"
+    volumes:
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
     restart: unless-stopped
 
   nginx:
@@ -18,8 +37,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - 80:80
-      - 443:443
+      - "80:80"
+      - "443:443"
     restart: unless-stopped
 
   keycloak:
@@ -27,52 +46,101 @@ services:
     image: activiti/activiti-keycloak
     volumes:
       - ./activiti-realm.json:/opt/jboss/keycloak/activiti-realm.json
+    ports:
+      - "8088:8080"
     restart: unless-stopped
     depends_on:
       - nginx
 
-  rabbitmq:
-    container_name: rabbitmq
-    image: rabbitmq
+  # ── Application Services ──────────────────────────────────────────
+
+  runtime-bundle:
+    build:
+      context: .
+      dockerfile: runtime-bundle/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://activiti-postgres:5432/activitidb
+      SPRING_DATASOURCE_USERNAME: activiti
+      SPRING_DATASOURCE_PASSWORD: mypassword
+      SPRING_DATASOURCE_HIKARI_SCHEMA: runtime_bundle
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: activiti
+      SPRING_RABBITMQ_PASSWORD: activiti
+      ACT_KEYCLOAK_URL: http://keycloak:8080/auth
+      ACT_KEYCLOAK_REALM: activiti
+      ACT_KEYCLOAK_RESOURCE: activiti
     ports:
-      - 5672:5672
-      - 15672:15672
-      - 61613:61613
-    volumes:
-      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
-    #      - rabbitmq-data:./rabbitmq-data
+      - "8081:8080"
+    depends_on:
+      - activiti-postgres
+      - rabbitmq
+      - keycloak
     restart: unless-stopped
 
-  activiti-cloud-modeling:
-    container_name: activiti-cloud-modeling
-    image: activiti/activiti-modeling-app:7.9.0
+  connector-service:
+    build:
+      context: .
+      dockerfile: connector-service/Dockerfile
     environment:
-      # JAVA_OPTS: "-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n -noverify"
-      APP_CONFIG_OAUTH2_HOST: "http://${DOCKER_IP}/auth/realms/${KEYCLOAK_REALM}"
-      APP_CONFIG_OAUTH2_CLIENTID: "${KEYCLOAK_REALM}"
-      API_URL: "http://${DOCKER_IP}"
-      BASE_PATH: /modeling
-      SERVER_PORT: 8080
-      APP_CONFIG_BPM_HOST: "http://${DOCKER_IP}"
-      APP_CONFIG_OAUTH2_REDIRECT_SILENT_IFRAME_URI: /modeling/assets/silent-refresh.html
-      APP_CONFIG_OAUTH2_REDIRECT_LOGIN: /modeling
-      APP_CONFIG_OAUTH2_REDIRECT_LOGOUT: /modeling
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: activiti
+      SPRING_RABBITMQ_PASSWORD: activiti
+    ports:
+      - "8083:8080"
+    depends_on:
+      - rabbitmq
     restart: unless-stopped
 
-  activiti-cloud-modeling-backend:
-    container_name: activiti-cloud-modeling-backend
-    image: activiti/activiti-cloud-modeling:7.9.0
+  query-service:
+    build:
+      context: .
+      dockerfile: query-service/Dockerfile
     environment:
-      JAVA_OPTS:                    -Xmx1024m -Xms512m -XX:+UnlockExperimentalVMOptions   -Dsun.zip.disableMemoryMapping=true -XX:+UseParallelGC -XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90
-      SPRING_APPLICATION_NAME:      modeling-service
-      SERVER_PORT:                  8080
-      ACT_KEYCLOAK_URL:             http://${DOCKER_IP}/auth
-      ACT_KEYCLOAK_REALM:           ${KEYCLOAK_REALM}
-      ACT_KEYCLOAK_RESOURCE:        ${KEYCLOAK_RESOURCE}
-      ACTIVITI_CLOUD_MODELING_URL:  localhost:8080
-      SERVER_SERVLET_CONTEXT_PATH:  /modeling-service
+      SPRING_DATASOURCE_URL: jdbc:postgresql://activiti-postgres:5432/activitidb
+      SPRING_DATASOURCE_USERNAME: activiti
+      SPRING_DATASOURCE_PASSWORD: mypassword
+      SPRING_DATASOURCE_HIKARI_SCHEMA: query_service
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: activiti
+      SPRING_RABBITMQ_PASSWORD: activiti
+      ACT_KEYCLOAK_URL: http://keycloak:8080/auth
+      ACT_KEYCLOAK_REALM: activiti
+      ACT_KEYCLOAK_RESOURCE: activiti
+    ports:
+      - "8182:8080"
+    depends_on:
+      - activiti-postgres
+      - rabbitmq
+      - keycloak
+    restart: unless-stopped
+
+  modeler-backend:
+    build:
+      context: .
+      dockerfile: modeler-backend/Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://activiti-postgres:5432/activitidb
+      SPRING_DATASOURCE_USERNAME: activiti
+      SPRING_DATASOURCE_PASSWORD: mypassword
+      SPRING_DATASOURCE_HIKARI_SCHEMA: modeler
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: activiti
+      SPRING_RABBITMQ_PASSWORD: activiti
+      ACT_KEYCLOAK_URL: http://keycloak:8080/auth
+      ACT_KEYCLOAK_REALM: activiti
+      ACT_KEYCLOAK_RESOURCE: activiti
+    ports:
+      - "8084:8080"
+    depends_on:
+      - activiti-postgres
+      - rabbitmq
+      - keycloak
+    restart: unless-stopped
 
 volumes:
-  rabbitmq-data:
   pgdata:
+  rabbitmq-data:
 
