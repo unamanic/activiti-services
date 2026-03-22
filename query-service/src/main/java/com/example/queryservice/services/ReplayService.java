@@ -12,11 +12,13 @@ import org.activiti.cloud.services.audit.jpa.repository.EventsRepository;
 import org.activiti.cloud.services.query.app.repository.ProcessInstanceRepository;
 import org.activiti.cloud.services.query.events.handlers.QueryEventHandlerContext;
 import org.activiti.cloud.services.query.events.handlers.QueryEventHandlerContextOptimizer;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Component
@@ -37,15 +39,16 @@ public class ReplayService {
         this.purgeService = purgeService;
     }
 
+    @Async
     @Transactional
-    public boolean replay(String id) {
+    public CompletableFuture<Boolean> replay(String id) {
         // find all audit events for a processInstance
         List<AuditEventEntity> auditEvents = auditEventRepository.findAll(((root, query, criteriaBuilder) -> {
             return criteriaBuilder.equal(root.get("processInstanceId"), id);
         }));
 
         if (auditEvents.isEmpty()) {
-            return false;
+            return CompletableFuture.completedFuture(false);
         }
 
         // transform from audit events to cloud Runtime events
@@ -58,7 +61,6 @@ public class ReplayService {
                 .map(cloudRuntimeEvent -> (CloudRuntimeEventImpl<?, ?>) cloudRuntimeEvent)
                 .collect(Collectors.toUnmodifiableList());
 
-
         // purge process from query service
         purgeService.purgeByProcessInstanceId(id);
 
@@ -66,7 +68,7 @@ public class ReplayService {
         // https://github.com/Activiti/activiti-cloud/blob/afa337cc8ed9ea847b65fd8270b80b5473266a91/activiti-cloud-query-service/activiti-cloud-services-query/activiti-cloud-services-query-events/src/main/java/org/activiti/cloud/services/query/app/QueryConsumerChannelHandler.java#L45-L48
         eventHandlerContext.handle(optimizer.optimize(cloudEvents).toArray(new CloudRuntimeEvent[]{}));
 
-        return true;
+        return CompletableFuture.completedFuture(true);
     }
 
 }
