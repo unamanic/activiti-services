@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY gradlew .
 COPY gradle gradle
+COPY gradle.properties .
 COPY settings.gradle .
 COPY build.gradle .
 COPY query-service/build.gradle query-service/build.gradle
@@ -13,7 +14,7 @@ COPY modeler-backend/build.gradle modeler-backend/build.gradle
 COPY query-service/src query-service/src
 
 RUN chmod +x gradlew && \
-    GRADLE_OPTS="-Dorg.gradle.java.installations.auto-detect=true -Dorg.gradle.java.installations.auto-download=false" \
+    GRADLE_OPTS="-Xmx2g -Dorg.gradle.java.installations.auto-detect=true -Dorg.gradle.java.installations.auto-download=false" \
     ./gradlew :query-service:bootJar -x test --no-daemon
 
 # ── Run Stage ─────────────────────────────────────────────────────
